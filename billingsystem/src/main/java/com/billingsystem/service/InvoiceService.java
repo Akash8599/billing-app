@@ -73,7 +73,7 @@ public class InvoiceService {
         invoice.setSubtotal(subtotal);
         invoice.setTotalTax(totalTax);
         invoice.setTotalAmount(subtotal + totalTax);
-        invoice.setInvoiceType(gstService.getInvoiceType(customer.getCustomerType()));
+//        invoice.setInvoiceType(gstService.getInvoiceType(customer.getCustomerType()));
         invoice.setPaymentMethod(request.getPaymentMethod());
         invoice.setStatus("COMPLETED");
         invoice.setInvoiceDate(System.currentTimeMillis());

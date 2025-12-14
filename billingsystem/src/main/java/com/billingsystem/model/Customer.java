@@ -22,9 +22,9 @@ public class Customer {
     private String email;
     @Column
     private String address;
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String gstNumber;
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String customerType;
     @Column(nullable = false)
     private Long createdAt;

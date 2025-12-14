@@ -51,8 +51,8 @@ public class CustomerService {
         Customer customer = new Customer();
         customer.setName(name);
         customer.setPhoneNumber(phoneNumber);
-        customer.setCustomerType(type);
-        customer.setGstNumber("");
+//        customer.setCustomerType(type);
+//        customer.setGstNumber("");
         customer.setCreatedAt(System.currentTimeMillis());
         customer.setUpdatedAt(System.currentTimeMillis());
         
@@ -70,8 +70,8 @@ public class CustomerService {
         customer.setPhoneNumber(customerData.getPhoneNumber());
         customer.setEmail(customerData.getEmail());
         customer.setAddress(customerData.getAddress());
-        customer.setGstNumber(customerData.getGstNumber());
-        customer.setCustomerType(customerData.getCustomerType());
+//        customer.setGstNumber(customerData.getGstNumber());
+//        customer.setCustomerType(customerData.getCustomerType());
         customer.setUpdatedAt(System.currentTimeMillis());
 
         return customerRepository.save(customer);
