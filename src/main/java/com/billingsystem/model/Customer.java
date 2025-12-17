@@ -32,7 +32,10 @@ public class Customer {
     private Long updatedAt;
     @Column
     private String stateCode;
-    @Column
+    @Column(nullable = false)
     private String state;
-
+    @Column(nullable = false)
+    private String city;
+    @Column(nullable = false)
+    private String pinCode;
 }

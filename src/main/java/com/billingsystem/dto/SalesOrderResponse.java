@@ -64,6 +64,9 @@ public class SalesOrderResponse {
                 .customerPhone(entity.getCustomerPhone())
                 .customerEmail(entity.getCustomerEmail())
                 .customerAddress(entity.getCustomerAddress())
+                .customerGstIn(entity.getCustomerGstIn())
+                .customerState(entity.getCustomerState())
+                .customerStateCode(entity.getCustomerStateCode())
                 .items(entity.getItems() != null ?
                         entity.getItems().stream()
                                 .map(SalesOrderItemResponse::fromEntity)

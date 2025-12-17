@@ -31,8 +31,9 @@ public class CustomerRequest {
 
     private Long updatedAt;
     private String city;
-    private String pinCode;
+    private String pincode;
     private String state;
+    private String statecode;
 
 }
 
