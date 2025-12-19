@@ -15,7 +15,7 @@ public class JwtProvider {
     @Value("${jwt.secret:MyVerySecureSecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration:86400000}")  // 24 hours
+    @Value("${jwt.expiration:3600000}")  // 24 hours
     private long jwtExpirationMs;
 
     public String generateToken(String username, String role, Long userId) {
