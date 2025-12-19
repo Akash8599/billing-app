@@ -48,6 +48,12 @@ public class Product {
     @Column(nullable = false)
     private Long createdAt;
 
-    @Column(nullable = false)
+    @Column
     private Long updatedAt;
+
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
 }

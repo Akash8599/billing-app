@@ -4,9 +4,13 @@ package com.billingsystem.service;
 import com.billingsystem.dto.CompanySettingsDTO;
 import com.billingsystem.model.CompanySettings;
 import com.billingsystem.repository.CompanySettingsRepository;
+import com.billingsystem.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -65,6 +69,10 @@ public class CompanySettingsService {
         settings.setSignature(dto.getSignature());
         settings.setAuthorizedSignatory(dto.getAuthorizedSignatory());
         settings.setAuthorizedSignatoryDesignation(dto.getAuthorizedSignatoryDesignation());
+        settings.setUpdatedAt(LocalDateTime.now());
+        settings.setUpdatedBy(SecurityUtils.currentUsername());
+        settings.setCreatedBy(SecurityUtils.currentUsername());
+        settings.setCreatedAt(LocalDateTime.now());
 
         CompanySettings saved = companySettingsRepository.save(settings);
         log.info("✅ Company settings updated successfully");

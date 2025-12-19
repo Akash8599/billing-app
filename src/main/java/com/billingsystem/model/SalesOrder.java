@@ -85,13 +85,17 @@ public class SalesOrder {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
-    // User who created the order
-    @Column(name = "created_by")
-    private String createdBy;
 
     // Notes
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
+
+
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
 
     @PrePersist
     protected void onCreate() {
@@ -101,10 +105,10 @@ public class SalesOrder {
         paymentStatus = PaymentStatus.UNPAID;
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+//    @PreUpdate
+//    protected void onUpdate() {
+//        updatedAt = LocalDateTime.now();
+//    }
 
     // Enums
     public enum OrderStatus {

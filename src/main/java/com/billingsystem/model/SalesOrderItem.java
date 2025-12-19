@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * ════════════════════════════════════════════════════════════════════════════
@@ -90,6 +91,20 @@ public class SalesOrderItem {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
+
+    // Timestamps
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     // ════════════════════════════════════════════════════════════════════════
     // ✅ STATIC METHOD: Capture Product Snapshot at Order Time
     // ════════════════════════════════════════════════════════════════════════
@@ -168,5 +183,16 @@ public class SalesOrderItem {
             return productName;
         }
         return product != null ? product.getName() : "Unknown";
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

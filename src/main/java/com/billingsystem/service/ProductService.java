@@ -4,7 +4,9 @@ import com.billingsystem.model.Product;
 import com.billingsystem.model.SalesOrderItem;
 import com.billingsystem.repository.ProductRepository;
 import com.billingsystem.repository.SalesOrderItemRepository;
+import com.billingsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +30,8 @@ public class ProductService {
         }
 
         product.setCreatedAt(System.currentTimeMillis());
-        product.setUpdatedAt(System.currentTimeMillis());
+//        product.setUpdatedAt(System.currentTimeMillis());
+        product.setCreatedBy(SecurityUtils.currentUsername());
         product.setIsActive(true);  // ← Ensure new product is active
         return productRepository.save(product);
     }
@@ -74,6 +77,7 @@ public class ProductService {
         product.setLowStockAlert(productData.getLowStockAlert());
         product.setQuantity(productData.getQuantity());
         product.setUpdatedAt(System.currentTimeMillis());
+        product.setUpdatedBy(SecurityUtils.currentUsername());
 
         return productRepository.save(product);
     }

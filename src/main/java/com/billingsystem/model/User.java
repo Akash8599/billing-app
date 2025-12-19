@@ -33,6 +33,5 @@ public class User {
     @Column(nullable = false)
     private Long createdAt;
 
-    @Column(nullable = false)
     private Long updatedAt;
 }

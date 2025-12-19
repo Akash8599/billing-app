@@ -66,10 +66,11 @@ public class CompanySettings {
     @Column
     private String website;
 
-    @Column(columnDefinition = "LONGTEXT")
+
+    @Column(columnDefinition = "TEXT")
     private String logo; // Base64 encoded logo
 
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "TEXT")
     private String signature; // Base64 encoded signature
 
     @Column
@@ -84,6 +85,12 @@ public class CompanySettings {
     @Column
     private LocalDateTime updatedAt;
 
+
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

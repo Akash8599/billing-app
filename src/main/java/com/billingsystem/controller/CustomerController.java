@@ -21,7 +21,7 @@ public class CustomerController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<CustomerRequest> createCustomer(@RequestBody CustomerRequest customer) {
-        CustomerRequest created = customerService.createCustomer(customer);
+        CustomerRequest created = customerService.createOrUpdateCustomer(customer);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

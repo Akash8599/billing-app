@@ -12,7 +12,9 @@ import com.billingsystem.repository.CustomerRepository;
 import com.billingsystem.repository.ProductRepository;
 import com.billingsystem.repository.SalesOrderRepository;
 import com.billingsystem.utils.CommonUtils;
+import com.billingsystem.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.CurrentTimestamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,7 +94,8 @@ public class SalesOrderService {
                 .customerGstIn(request.getCustomerGstIn())
                 .notes(request.getNotes())
                 .invoiceDate(LocalDateTime.now())
-                .createdBy(currentUser)
+                .createdBy(SecurityUtils.currentUsername())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         // Generate order number (format: ORD-YYYY-MM-DD-XXXXX)
@@ -125,6 +128,8 @@ public class SalesOrderService {
                             itemRequest.getGstRate().intValue() :
                             product.getGstRate().intValue())
                     .discountPercent(itemRequest.getDiscountPercent())
+                    .createdAt(LocalDateTime.now())
+                    .createdBy(SecurityUtils.currentUsername())
                     .build();
 
             // Calculate item totals
@@ -160,6 +165,8 @@ public class SalesOrderService {
 
             // Update product quantity
             product.setQuantity(newQuantity);
+            product.setUpdatedBy(SecurityUtils.currentUsername());
+            product.setUpdatedAt(System.currentTimeMillis());
 
             // Save product
             productRepository.save(product);
@@ -196,6 +203,7 @@ public class SalesOrderService {
             customer.setAddress(request.getCustomerAddress());
             customer.setGstNumber(request.getCustomerGstIn() != null ? request.getCustomerGstIn() : "");
             customer.setUpdatedAt(System.currentTimeMillis());
+            customer.setUpdatedBy(SecurityUtils.currentUsername());
         } else {
             // Create new customer
             customer = new Customer();
@@ -205,7 +213,8 @@ public class SalesOrderService {
             customer.setAddress(request.getCustomerAddress());
             customer.setGstNumber(request.getCustomerGstIn() != null ? request.getCustomerGstIn() : "");
             customer.setCreatedAt(System.currentTimeMillis());
-            customer.setUpdatedAt(System.currentTimeMillis());
+//            customer.setUpdatedAt(System.currentTimeMillis());
+            customer.setCreatedBy(SecurityUtils.currentUsername());
         }
 
         // ✅ SAVE TO DATABASE
@@ -266,6 +275,8 @@ public class SalesOrderService {
 
         order.setPaymentStatus(SalesOrder.PaymentStatus.PAID);
         order.setPaidAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+        order.setUpdatedBy(SecurityUtils.currentUsername());
 
         SalesOrder savedOrder = salesOrderRepository.save(order);
         log.info("Order {} marked as paid", order.getOrderNumber());
@@ -328,6 +339,8 @@ public class SalesOrderService {
 
         // Update order status to CANCELLED
         order.setStatus(SalesOrder.OrderStatus.CANCELLED);
+        order.setUpdatedBy(SecurityUtils.currentUsername());
+        order.setUpdatedAt(LocalDateTime.now());
         SalesOrder savedOrder = salesOrderRepository.save(order);
 
         log.info("✅ Order {} cancelled successfully", order.getOrderNumber());

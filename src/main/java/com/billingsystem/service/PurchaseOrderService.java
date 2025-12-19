@@ -3,6 +3,7 @@ package com.billingsystem.service;
 import com.billingsystem.dto.CreatePurchaseOrderRequest;
 import com.billingsystem.model.*;
 import com.billingsystem.repository.*;
+import com.billingsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,35 +25,44 @@ public class PurchaseOrderService {
             throw new RuntimeException("Purchase order must contain at least one item");
         }
 
-        List<PurchaseOrderItem> items = new ArrayList<>();
-        Double totalAmount = 0.0;
+        try {
+            List<PurchaseOrderItem> items = new ArrayList<>();
+            Double totalAmount = 0.0;
 
-        for (CreatePurchaseOrderRequest.PurchaseOrderItemRequest itemReq : request.getItems()) {
-            Product product = productRepository.findById(itemReq.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found: " + itemReq.getProductId()));
+            for (CreatePurchaseOrderRequest.PurchaseOrderItemRequest itemReq : request.getItems()) {
+                Product product = productRepository.findById(itemReq.getProductId())
+                        .orElseThrow(() -> new RuntimeException("Product not found: " + itemReq.getProductId()));
 
-            Double itemTotal = itemReq.getQuantity() * itemReq.getCostPrice();
+                Double itemTotal = itemReq.getQuantity() * itemReq.getCostPrice();
 
-            PurchaseOrderItem item = new PurchaseOrderItem();
-            item.setProduct(product);
-            item.setQuantity(itemReq.getQuantity());
-            item.setCostPrice(itemReq.getCostPrice());
-            item.setItemTotal(itemTotal);
+                PurchaseOrderItem item = new PurchaseOrderItem();
+                item.setProduct(product);
+                item.setQuantity(itemReq.getQuantity());
+                item.setCostPrice(itemReq.getCostPrice());
+                item.setItemTotal(itemTotal);
+                item.setCreatedBy(SecurityUtils.currentUsername());
+                item.setCreatedAt(System.currentTimeMillis());
 
-            items.add(item);
-            totalAmount += itemTotal;
+                items.add(item);
+                totalAmount += itemTotal;
+            }
+
+            PurchaseOrder po = new PurchaseOrder();
+            po.setPoNumber(generatePONumber());
+            po.setSupplierName(request.getSupplierName());
+            po.setItems(items);
+            po.setTotalAmount(totalAmount);
+            po.setStatus("ORDERED");
+            po.setOrderDate(System.currentTimeMillis());
+            po.setCreatedAt(System.currentTimeMillis());
+            po.setCreatedBy(SecurityUtils.currentUsername());
+
+            return poRepository.save(po);
         }
-
-        PurchaseOrder po = new PurchaseOrder();
-        po.setPoNumber(generatePONumber());
-        po.setSupplierName(request.getSupplierName());
-        po.setItems(items);
-        po.setTotalAmount(totalAmount);
-        po.setStatus("ORDERED");
-        po.setOrderDate(System.currentTimeMillis());
-        po.setCreatedAt(System.currentTimeMillis());
-
-        return poRepository.save(po);
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -77,6 +87,7 @@ public class PurchaseOrderService {
             // Update cost price from this PO
             product.setCostPrice(item.getCostPrice());
             product.setUpdatedAt(System.currentTimeMillis());
+            product.setUpdatedBy(SecurityUtils.currentUsername());
             productRepository.save(product);
         }
 

@@ -25,4 +25,16 @@ public class PurchaseOrderItem {
     private Double itemTotal;
     @Column(name = "purchase_order_id", insertable = false, updatable = false)
     private Long purchaseOrderId;
+
+    @Column(nullable = false)
+    private Long createdAt;
+
+    @Column
+    private Long updatedAt;
+
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
 }

@@ -57,8 +57,7 @@ public class AuthService {
         user.setRole(request.getRole() != null ? request.getRole() : "ADMIN");
         user.setActive(true);
         user.setCreatedAt(System.currentTimeMillis());
-        user.setUpdatedAt(System.currentTimeMillis());
-
+//        user.setUpdatedAt(System.currentTimeMillis());
         userRepository.save(user);
 
         String token = jwtProvider.generateToken(user.getUsername(), user.getRole());

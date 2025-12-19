@@ -16,7 +16,7 @@ public class Customer {
     private Long id;
     @Column(nullable = false)
     private String name;
-    @Column
+    @Column(name = "phone_number", nullable = false, unique = true)
     private String phoneNumber;
     @Column
     private String email;
@@ -28,7 +28,7 @@ public class Customer {
     private String customerType;
     @Column(nullable = false)
     private Long createdAt;
-    @Column(nullable = false)
+    @Column
     private Long updatedAt;
     @Column
     private String stateCode;
@@ -38,4 +38,10 @@ public class Customer {
     private String city;
     @Column(nullable = false)
     private String pinCode;
+
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
 }

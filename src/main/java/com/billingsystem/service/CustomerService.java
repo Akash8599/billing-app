@@ -4,11 +4,13 @@ import com.billingsystem.dto.CustomerRequest;
 import com.billingsystem.mapper.CustomerMapper;
 import com.billingsystem.model.Customer;
 import com.billingsystem.repository.CustomerRepository;
+import com.billingsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,22 +28,40 @@ public class CustomerService {
     /**
      * Create new customer
      */
-    public CustomerRequest createCustomer(CustomerRequest customerRequest) {
-        customerRequest.setCreatedAt(System.currentTimeMillis());
-        customerRequest.setUpdatedAt(System.currentTimeMillis());
+    public CustomerRequest createOrUpdateCustomer(CustomerRequest req) {
 
-        Customer customer = customerMapper.toCustomer(customerRequest);
-        Customer save = customerRepository.save(customer);
-        CustomerRequest  response = customerMapper.toCustomerRequest(save);
-        return response;
+        if (req.getPhone() == null || req.getPhone().isBlank()) {
+            throw new IllegalArgumentException("Phone number is required");
+        }
+
+        Customer customer = customerRepository
+                .findByPhoneNumber(req.getPhone())
+                .orElseGet(() -> {
+                    Customer c = customerMapper.toCustomer(req);
+                    c.setCreatedAt(System.currentTimeMillis());
+                    c.setCreatedBy(SecurityUtils.currentUsername());
+                    return c;
+                });
+
+        // update existing or newly created entity IN-PLACE
+        customerMapper.updateCustomerFromRequest(req, customer);
+
+        customer.setUpdatedAt(System.currentTimeMillis());
+        customer.setUpdatedBy(SecurityUtils.currentUsername());
+
+        Customer saved = customerRepository.save(customer);
+        return customerMapper.toCustomerRequest(saved);
     }
+
 
     /**
      * Get all customers
      */
     public List<CustomerRequest> getAllCustomers() {
         List<Customer> customers = customerRepository.findAll();
-        return customers.stream().map(customer -> customerMapper.toCustomerRequest(customer)).collect(Collectors.toList());
+        List<CustomerRequest> collect = customers.stream().map(customer -> customerMapper
+                .toCustomerRequest(customer)).collect(Collectors.toList());
+        return collect;
     }
 
     /**
@@ -69,6 +89,8 @@ public class CustomerService {
 //        customer.setGstNumber("");
         customer.setCreatedAt(System.currentTimeMillis());
         customer.setUpdatedAt(System.currentTimeMillis());
+        customer.setCreatedBy(SecurityUtils.currentUsername());
+        customer.setUpdatedBy(SecurityUtils.currentUsername());
         
         return customerRepository.save(customer);
     }
@@ -89,6 +111,7 @@ public class CustomerService {
 //        customer.setStateCode(customerData.getState());
 //        customer.setCustomerType(customerData.getCustomerType());
         customer.setUpdatedAt(System.currentTimeMillis());
+        customer.setUpdatedBy(SecurityUtils.currentUsername());
 
         Customer update = customerRepository.save(customer);
         CustomerRequest  response = customerMapper.toCustomerRequest(update);

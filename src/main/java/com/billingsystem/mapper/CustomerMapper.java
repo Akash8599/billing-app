@@ -5,6 +5,7 @@ import com.billingsystem.dto.CustomerRequest;
 import com.billingsystem.model.Customer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel="spring")
 public interface CustomerMapper {
@@ -20,4 +21,13 @@ public interface CustomerMapper {
     @Mapping(source = "stateCode", target = "statecode")
     @Mapping(source = "pinCode", target = "pincode")
     public CustomerRequest toCustomerRequest(Customer customerRequest);
+
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    void updateCustomerFromRequest(
+            CustomerRequest request,
+            @MappingTarget Customer customer
+    );
 }

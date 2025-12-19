@@ -50,7 +50,7 @@ public class CompanySettingsController {
      * Accessible to: ADMIN only
      */
     @PutMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<?> updateCompanySettings(@RequestBody CompanySettingsDTO dto) {
         try {
             log.info("PUT request: Update company settings");

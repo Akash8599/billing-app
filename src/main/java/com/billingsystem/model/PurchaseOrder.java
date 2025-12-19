@@ -32,4 +32,12 @@ public class PurchaseOrder {
     private Long receivedDate;
     @Column(nullable = false)
     private Long createdAt;
+
+    @Column
+    private Long updatedAt;
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
 }
