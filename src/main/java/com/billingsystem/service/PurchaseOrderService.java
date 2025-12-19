@@ -40,7 +40,7 @@ public class PurchaseOrderService {
                 item.setQuantity(itemReq.getQuantity());
                 item.setCostPrice(itemReq.getCostPrice());
                 item.setItemTotal(itemTotal);
-                item.setCreatedBy(SecurityUtils.currentUsername());
+                item.setCreatedBy(SecurityUtils.currentUserId());
                 item.setCreatedAt(System.currentTimeMillis());
 
                 items.add(item);
@@ -55,7 +55,7 @@ public class PurchaseOrderService {
             po.setStatus("ORDERED");
             po.setOrderDate(System.currentTimeMillis());
             po.setCreatedAt(System.currentTimeMillis());
-            po.setCreatedBy(SecurityUtils.currentUsername());
+            po.setCreatedBy(SecurityUtils.currentUserId());
 
             return poRepository.save(po);
         }
@@ -87,7 +87,7 @@ public class PurchaseOrderService {
             // Update cost price from this PO
             product.setCostPrice(item.getCostPrice());
             product.setUpdatedAt(System.currentTimeMillis());
-            product.setUpdatedBy(SecurityUtils.currentUsername());
+            product.setUpdatedBy(SecurityUtils.currentUserId());
             productRepository.save(product);
         }
 
@@ -100,35 +100,35 @@ public class PurchaseOrderService {
      * Get all purchase orders
      */
     public List<PurchaseOrder> getAllPurchaseOrders() {
-        return poRepository.findAll();
+        return poRepository.findAllByCreatedBy(SecurityUtils.currentUserId());
     }
 
     /**
      * Get purchase order by ID
      */
     public Optional<PurchaseOrder> getPurchaseOrderById(Long id) {
-        return poRepository.findById(id);
+        return poRepository.findByIdAndCreatedBy(id, SecurityUtils.currentUserId());
     }
 
     /**
      * Get pending purchase orders
      */
     public List<PurchaseOrder> getPendingPurchaseOrders() {
-        return poRepository.findByStatus("ORDERED");
+        return poRepository.findByStatusAndCreatedBy("ORDERED", SecurityUtils.currentUserId());
     }
 
     /**
      * Get received purchase orders
      */
     public List<PurchaseOrder> getReceivedPurchaseOrders() {
-        return poRepository.findByStatus("RECEIVED");
+        return poRepository.findByStatusAndCreatedBy("RECEIVED", SecurityUtils.currentUserId());
     }
 
     /**
      * Cancel purchase order
      */
     public void cancelPurchaseOrder(Long poId) {
-        PurchaseOrder po = poRepository.findById(poId)
+        PurchaseOrder po = poRepository.findByIdAndCreatedBy(poId, SecurityUtils.currentUserId())
                 .orElseThrow(() -> new RuntimeException("Purchase order not found"));
 
         if ("RECEIVED".equals(po.getStatus())) {

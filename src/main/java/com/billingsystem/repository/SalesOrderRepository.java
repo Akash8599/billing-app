@@ -1,6 +1,5 @@
 package com.billingsystem.repository;
 
-
 import com.billingsystem.model.SalesOrder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,73 +13,85 @@ import java.util.Optional;
 @Repository
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
 
-    /**
-     * Find order by order number
-     */
-    Optional<SalesOrder> findByOrderNumber(String orderNumber);
+    /* ===============================
+       BASIC LOOKUPS (USER SCOPED)
+       =============================== */
 
-    /**
-     * Find all orders for a customer by phone number
-     */
-    List<SalesOrder> findByCustomerPhone(String customerPhone);
+    Optional<SalesOrder> findByOrderNumberAndCreatedBy(String orderNumber, Long createdBy);
 
-    /**
-     * Find all orders for a customer by email
-     */
-    List<SalesOrder> findByCustomerEmail(String customerEmail);
+    List<SalesOrder> findAllByCreatedBy(Long createdBy);
 
-    /**
-     * Find all orders for a customer by name (case-insensitive)
-     */
-    List<SalesOrder> findByCustomerNameIgnoreCase(String customerName);
+    Optional<SalesOrder> findByIdAndCreatedBy(Long id, Long createdBy);
 
-    /**
-     * Find all unpaid orders
-     */
-    @Query("SELECT so FROM SalesOrder so WHERE so.paymentStatus = 'UNPAID'")
-    List<SalesOrder> findUnpaidOrders();
+    /* ===============================
+       CUSTOMER FILTERS (USER SCOPED)
+       =============================== */
 
-    /**
-     * Find all paid orders
-     */
-    @Query("SELECT so FROM SalesOrder so WHERE so.paymentStatus = 'PAID'")
-    List<SalesOrder> findPaidOrders();
+    List<SalesOrder> findByCustomerPhoneAndCreatedBy(String customerPhone, Long createdBy);
 
-    /**
-     * Find all cancelled orders
-     */
-    @Query("SELECT so FROM SalesOrder so WHERE so.status = 'CANCELLED'")
-    List<SalesOrder> findCancelledOrders();
+    List<SalesOrder> findByCustomerEmailAndCreatedBy(String customerEmail, Long createdBy);
 
-    /**
-     * Find orders created between two dates
-     */
-    @Query("SELECT so FROM SalesOrder so WHERE so.createdAt BETWEEN :startDate AND :endDate")
-    List<SalesOrder> findOrdersBetweenDates(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
+    List<SalesOrder> findByCustomerNameIgnoreCaseAndCreatedBy(String customerName, Long createdBy);
+
+    /* ===============================
+       STATUS FILTERS (USER SCOPED)
+       =============================== */
+
+    List<SalesOrder> findByPaymentStatusAndCreatedBy(
+            SalesOrder.PaymentStatus paymentStatus,
+            Long createdBy
     );
 
-    /**
-     * Count orders by status
-     */
-    long countByStatus(SalesOrder.OrderStatus status);
+    List<SalesOrder> findByStatusAndCreatedBy(
+            SalesOrder.OrderStatus status,
+            Long createdBy
+    );
 
-    /**
-     * Count orders by payment status
-     */
-    long countByPaymentStatus(SalesOrder.PaymentStatus paymentStatus);
+    /* ===============================
+       DATE RANGE (USER SCOPED)
+       =============================== */
 
-    /**
-     * Find orders by created by user
-     */
-    List<SalesOrder> findByCreatedBy(String createdBy);
+    @Query("""
+        SELECT so
+        FROM SalesOrder so
+        WHERE so.createdAt BETWEEN :startDate AND :endDate
+          AND so.createdBy = :userId
+    """)
+    List<SalesOrder> findOrdersBetweenDatesAndUser(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("userId") Long userId
+    );
 
-    /**
-     * Search orders by customer name or phone
-     */
-    @Query("SELECT so FROM SalesOrder so WHERE " +
-            "LOWER(so.customerName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-            "so.customerPhone LIKE CONCAT('%', :searchTerm, '%')")
-    List<SalesOrder> searchOrders(@Param("searchTerm") String searchTerm);
+    /* ===============================
+       COUNTS (USER SCOPED)
+       =============================== */
+
+    long countByStatusAndCreatedBy(
+            SalesOrder.OrderStatus status,
+            Long createdBy
+    );
+
+    long countByPaymentStatusAndCreatedBy(
+            SalesOrder.PaymentStatus paymentStatus,
+            Long createdBy
+    );
+
+    /* ===============================
+       SEARCH (USER SCOPED)
+       =============================== */
+
+    @Query("""
+        SELECT so
+        FROM SalesOrder so
+        WHERE so.createdBy = :userId
+          AND (
+              LOWER(so.customerName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+              OR so.customerPhone LIKE CONCAT('%', :searchTerm, '%')
+          )
+    """)
+    List<SalesOrder> searchOrdersByUser(
+            @Param("searchTerm") String searchTerm,
+            @Param("userId") Long userId
+    );
 }

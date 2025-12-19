@@ -10,11 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -35,11 +33,11 @@ public class CustomerService {
         }
 
         Customer customer = customerRepository
-                .findByPhoneNumber(req.getPhone())
+                .findByPhoneNumberAndCreatedBy(req.getPhone(), SecurityUtils.currentUserId())
                 .orElseGet(() -> {
                     Customer c = customerMapper.toCustomer(req);
                     c.setCreatedAt(System.currentTimeMillis());
-                    c.setCreatedBy(SecurityUtils.currentUsername());
+                    c.setCreatedBy(SecurityUtils.currentUserId());
                     return c;
                 });
 
@@ -47,7 +45,7 @@ public class CustomerService {
         customerMapper.updateCustomerFromRequest(req, customer);
 
         customer.setUpdatedAt(System.currentTimeMillis());
-        customer.setUpdatedBy(SecurityUtils.currentUsername());
+        customer.setUpdatedBy(SecurityUtils.currentUserId());
 
         Customer saved = customerRepository.save(customer);
         return customerMapper.toCustomerRequest(saved);
@@ -58,7 +56,7 @@ public class CustomerService {
      * Get all customers
      */
     public List<CustomerRequest> getAllCustomers() {
-        List<Customer> customers = customerRepository.findAll();
+        List<Customer> customers = customerRepository.findAllByCreatedBy(SecurityUtils.currentUserId());
         List<CustomerRequest> collect = customers.stream().map(customer -> customerMapper
                 .toCustomerRequest(customer)).collect(Collectors.toList());
         return collect;
@@ -76,7 +74,7 @@ public class CustomerService {
      * Get or create customer by phone number (for quick checkout)
      */
     public Customer getOrCreateCustomer(String phoneNumber, String name, String type) {
-        Optional<Customer> existing = customerRepository.findByPhoneNumber(phoneNumber);
+        Optional<Customer> existing = customerRepository.findByPhoneNumberAndCreatedBy(phoneNumber, SecurityUtils.currentUserId());
         
         if (existing.isPresent()) {
             return existing.get();
@@ -89,8 +87,8 @@ public class CustomerService {
 //        customer.setGstNumber("");
         customer.setCreatedAt(System.currentTimeMillis());
         customer.setUpdatedAt(System.currentTimeMillis());
-        customer.setCreatedBy(SecurityUtils.currentUsername());
-        customer.setUpdatedBy(SecurityUtils.currentUsername());
+        customer.setCreatedBy(SecurityUtils.currentUserId());
+        customer.setUpdatedBy(SecurityUtils.currentUserId());
         
         return customerRepository.save(customer);
     }
@@ -111,7 +109,7 @@ public class CustomerService {
 //        customer.setStateCode(customerData.getState());
 //        customer.setCustomerType(customerData.getCustomerType());
         customer.setUpdatedAt(System.currentTimeMillis());
-        customer.setUpdatedBy(SecurityUtils.currentUsername());
+        customer.setUpdatedBy(SecurityUtils.currentUserId());
 
         Customer update = customerRepository.save(customer);
         CustomerRequest  response = customerMapper.toCustomerRequest(update);

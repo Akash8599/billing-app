@@ -24,7 +24,7 @@ public class CompanySettingsService {
      */
     public CompanySettingsDTO getCompanySettings() {
         log.info("Fetching company settings");
-        CompanySettings settings = companySettingsRepository.findFirstByOrderByIdAsc();
+        CompanySettings settings = companySettingsRepository.findFirstByCreatedByOrderByIdAsc(SecurityUtils.currentUserId());
 
         if (settings == null) {
             log.warn("No company settings found");
@@ -40,7 +40,7 @@ public class CompanySettingsService {
     public CompanySettingsDTO updateCompanySettings(CompanySettingsDTO dto) {
         log.info("Updating company settings");
 
-        CompanySettings settings = companySettingsRepository.findFirstByOrderByIdAsc();
+        CompanySettings settings = companySettingsRepository.findFirstByCreatedByOrderByIdAsc(SecurityUtils.currentUserId());
 
         if (settings == null) {
             // Create new if doesn't exist
@@ -70,8 +70,8 @@ public class CompanySettingsService {
         settings.setAuthorizedSignatory(dto.getAuthorizedSignatory());
         settings.setAuthorizedSignatoryDesignation(dto.getAuthorizedSignatoryDesignation());
         settings.setUpdatedAt(LocalDateTime.now());
-        settings.setUpdatedBy(SecurityUtils.currentUsername());
-        settings.setCreatedBy(SecurityUtils.currentUsername());
+        settings.setUpdatedBy(SecurityUtils.currentUserId());
+        settings.setCreatedBy(SecurityUtils.currentUserId());
         settings.setCreatedAt(LocalDateTime.now());
 
         CompanySettings saved = companySettingsRepository.save(settings);

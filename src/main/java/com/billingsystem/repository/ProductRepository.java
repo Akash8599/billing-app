@@ -4,41 +4,26 @@ import com.billingsystem.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    Optional<Product> findBySku(String sku);
+    // Find product by SKU for a specific user
+    Optional<Product> findBySkuAndCreatedBy(String sku, Long createdBy);
 
-    @Query("SELECT p FROM Product p WHERE p.quantity <= p.lowStockAlert")
-    List<Product> findLowStockProducts();
+    // Find all active products for a specific user
+    List<Product> findAllByIsActiveTrueAndCreatedBy(Long createdBy);
 
-    // ════════════════════════════════════════════════════════════════════════
-    // ✅ NEW: Only return active products
-    // ════════════════════════════════════════════════════════════════════════
+    // Find active product by SKU for a specific user
+    Optional<Product> findBySkuAndIsActiveTrueAndCreatedBy(String sku, Long createdBy);
 
-    /**
-     * Get all ACTIVE products only
-     * Soft deleted products (isActive = false) are excluded
-     */
-    List<Product> findAllByIsActiveTrue();
+    // Find active low stock products for a specific user
+    @Query("SELECT p FROM Product p WHERE p.quantity <= p.lowStockAlert AND p.isActive = true AND p.createdBy = :createdBy")
+    List<Product> findLowStockProductsActiveByUser(Long createdBy);
 
-    /**
-     * Get active product by SKU
-     */
-    Optional<Product> findBySkuAndIsActiveTrue(String sku);
-
-    /**
-     * Get active low stock products
-     */
-    @Query("SELECT p FROM Product p WHERE p.quantity <= p.lowStockAlert AND p.isActive = true")
-    List<Product> findLowStockProductsActive();
-
-    /**
-     * Get product by ID (can be active or inactive)
-     * Used internally to check if product exists
-     */
-    Optional<Product> findById(Long id);
+    // Get product by ID for a specific user
+    Optional<Product> findByIdAndCreatedBy(Long id, Long createdBy);
 }

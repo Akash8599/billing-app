@@ -48,7 +48,7 @@ public class SalesOrderResponse {
     private LocalDateTime paidAt;
 
     // Created by
-    private String createdBy;
+    private Long createdBy;
 
     // Notes
     private String notes;

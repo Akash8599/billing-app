@@ -29,7 +29,7 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
-        String token = jwtProvider.generateToken(user.getUsername(), user.getRole());
+        String token = jwtProvider.generateToken(user.getUsername(), user.getRole(), user.getId());
 
         return new LoginResponse(
             token,
@@ -60,7 +60,7 @@ public class AuthService {
 //        user.setUpdatedAt(System.currentTimeMillis());
         userRepository.save(user);
 
-        String token = jwtProvider.generateToken(user.getUsername(), user.getRole());
+        String token = jwtProvider.generateToken(user.getUsername(), user.getRole(), user.getId());
 
         return new LoginResponse(
             token,

@@ -87,10 +87,10 @@ public class CompanySettings {
 
 
     @Column(name = "created_by", nullable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    private Long updatedBy;
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

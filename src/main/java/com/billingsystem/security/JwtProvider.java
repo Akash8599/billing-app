@@ -18,11 +18,12 @@ public class JwtProvider {
     @Value("${jwt.expiration:86400000}")  // 24 hours
     private long jwtExpirationMs;
 
-    public String generateToken(String username, String role) {
+    public String generateToken(String username, String role, Long userId) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 
         return Jwts.builder()
                 .setSubject(username)
+                .claim("userId", userId)
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
@@ -49,6 +50,17 @@ public class JwtProvider {
                 .getBody()
                 .get("role", String.class);
     }
+
+    public Long getUserIdFromToken(String token) {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("userId", Long.class);
+    }
+
 
     public boolean validateToken(String token) {
         try {

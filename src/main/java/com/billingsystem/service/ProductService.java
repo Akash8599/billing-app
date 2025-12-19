@@ -31,7 +31,7 @@ public class ProductService {
 
         product.setCreatedAt(System.currentTimeMillis());
 //        product.setUpdatedAt(System.currentTimeMillis());
-        product.setCreatedBy(SecurityUtils.currentUsername());
+        product.setCreatedBy(SecurityUtils.currentUserId());
         product.setIsActive(true);  // ← Ensure new product is active
         return productRepository.save(product);
     }
@@ -40,7 +40,7 @@ public class ProductService {
      * Get all ACTIVE products only
      */
     public List<Product> getAllProducts() {
-        return productRepository.findAllByIsActiveTrue();  // ← Only active
+        return productRepository.findAllByIsActiveTrueAndCreatedBy(SecurityUtils.currentUserId());  // ← Only active
     }
 
     /**
@@ -55,7 +55,7 @@ public class ProductService {
      * Get product by SKU (only active)
      */
     public Optional<Product> getProductBySku(String sku) {
-        return productRepository.findBySkuAndIsActiveTrue(sku);
+        return productRepository.findBySkuAndCreatedBy(sku, SecurityUtils.currentUserId());
     }
 
     /**
@@ -77,7 +77,7 @@ public class ProductService {
         product.setLowStockAlert(productData.getLowStockAlert());
         product.setQuantity(productData.getQuantity());
         product.setUpdatedAt(System.currentTimeMillis());
-        product.setUpdatedBy(SecurityUtils.currentUsername());
+        product.setUpdatedBy(SecurityUtils.currentUserId());
 
         return productRepository.save(product);
     }
@@ -86,7 +86,7 @@ public class ProductService {
      * Get low stock products (only active)
      */
     public List<Product> getLowStockProducts() {
-        return productRepository.findLowStockProductsActive();
+        return productRepository.findLowStockProductsActiveByUser(SecurityUtils.currentUserId());
     }
 
     /**
@@ -129,7 +129,7 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
         // Check if product is used in any sales orders
-        List<SalesOrderItem> usedInOrders = salesOrderItemRepository.findByProductId(id);
+        List<SalesOrderItem> usedInOrders = salesOrderItemRepository.findByProductIdAndUser(id, SecurityUtils.currentUserId());
 
         if (usedInOrders != null && !usedInOrders.isEmpty()) {
             // ════════════════════════════════════════════════════════════════
@@ -181,7 +181,7 @@ public class ProductService {
      * Get product usage count
      */
     public long getProductUsageCount(Long productId) {
-        List<SalesOrderItem> items = salesOrderItemRepository.findByProductId(productId);
+        List<SalesOrderItem> items = salesOrderItemRepository.findByProductIdAndUser(productId, SecurityUtils.currentUserId());
         return items != null ? items.size() : 0;
     }
 
@@ -189,7 +189,7 @@ public class ProductService {
      * Check if product is used in orders
      */
     public boolean isProductUsedInOrders(Long productId) {
-        List<SalesOrderItem> items = salesOrderItemRepository.findByProductId(productId);
+        List<SalesOrderItem> items = salesOrderItemRepository.findByProductIdAndUser(productId, SecurityUtils.currentUserId());
         return items != null && !items.isEmpty();
     }
 
@@ -197,7 +197,7 @@ public class ProductService {
      * Reactivate a soft-deleted product
      */
     public Product reactivateProduct(Long productId) {
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdAndCreatedBy(productId, SecurityUtils.currentUserId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         if (product.getIsActive()) {

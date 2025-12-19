@@ -29,13 +29,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && jwtProvider.validateToken(token)) {
             String username = jwtProvider.getUsernameFromToken(token);
             String role = jwtProvider.getRoleFromToken(token);
+            Long userId = jwtProvider.getUserIdFromToken(token);
 
-            UsernamePasswordAuthenticationToken authentication = 
-                new UsernamePasswordAuthenticationToken(
-                    username, 
-                    null, 
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
-                );
+
+            UserPrincipal principal =
+                    new UserPrincipal(userId, username, role);
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            principal,
+                            null,
+                            Collections.singletonList(
+                                    new SimpleGrantedAuthority("ROLE_" + role)
+                            )
+                    );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

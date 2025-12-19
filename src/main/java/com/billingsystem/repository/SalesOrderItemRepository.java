@@ -12,29 +12,39 @@ import java.util.List;
 public interface SalesOrderItemRepository extends JpaRepository<SalesOrderItem, Long> {
 
     /**
-     * ✅ FIXED: Find all sales order items that use a specific product
-     * Using product.id instead of productId (which is @Transient)
-     *
-     * @param productId Product ID to search for
-     * @return List of SalesOrderItem that reference this product
+     * Find sales order items using a product
+     * scoped to logged-in user
      */
-    @Query("SELECT soi FROM SalesOrderItem soi WHERE soi.product.id = :productId")
-    List<SalesOrderItem> findByProductId(@Param("productId") Long productId);
+    @Query("""
+        SELECT soi
+        FROM SalesOrderItem soi
+        WHERE soi.product.id = :productId
+          AND soi.salesOrder.createdBy = :userId
+    """)
+    List<SalesOrderItem> findByProductIdAndUser(
+            @Param("productId") Long productId,
+            @Param("userId") Long userId
+    );
 
     /**
-     * ✅ FIXED: Count how many sales order items use a specific product
-     *
-     * @param productId Product ID to count
-     * @return Number of items using this product
+     * Count product usage for logged-in user
      */
-    @Query("SELECT COUNT(soi) FROM SalesOrderItem soi WHERE soi.product.id = :productId")
-    long countByProductId(@Param("productId") Long productId);
+    @Query("""
+        SELECT COUNT(soi)
+        FROM SalesOrderItem soi
+        WHERE soi.product.id = :productId
+          AND soi.salesOrder.createdBy = :userId
+    """)
+    long countByProductIdAndUser(
+            @Param("productId") Long productId,
+            @Param("userId") Long userId
+    );
 
     /**
-     * Find all items in a specific sales order
-     *
-     * @param salesOrderId Sales order ID
-     * @return List of items in that order
+     * Get all items in a sales order (user-safe)
      */
-    List<SalesOrderItem> findBySalesOrderId(Long salesOrderId);
+    List<SalesOrderItem> findBySalesOrderIdAndSalesOrderCreatedBy(
+            Long salesOrderId,
+            Long userId
+    );
 }

@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "purchase_order_items")
+    @Table(name = "purchase_order_items")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,8 +33,8 @@ public class PurchaseOrderItem {
     private Long updatedAt;
 
     @Column(name = "created_by", nullable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    private Long updatedBy;
 }

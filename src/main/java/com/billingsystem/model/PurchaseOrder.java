@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PurchaseOrder {
+    public class PurchaseOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,8 +36,8 @@ public class PurchaseOrder {
     @Column
     private Long updatedAt;
     @Column(name = "created_by", nullable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    private Long updatedBy;
 }

@@ -14,7 +14,6 @@ import com.billingsystem.repository.SalesOrderRepository;
 import com.billingsystem.utils.CommonUtils;
 import com.billingsystem.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.CurrentTimestamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,7 +93,7 @@ public class SalesOrderService {
                 .customerGstIn(request.getCustomerGstIn())
                 .notes(request.getNotes())
                 .invoiceDate(LocalDateTime.now())
-                .createdBy(SecurityUtils.currentUsername())
+                .createdBy(SecurityUtils.currentUserId())
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -129,7 +128,7 @@ public class SalesOrderService {
                             product.getGstRate().intValue())
                     .discountPercent(itemRequest.getDiscountPercent())
                     .createdAt(LocalDateTime.now())
-                    .createdBy(SecurityUtils.currentUsername())
+                    .createdBy(SecurityUtils.currentUserId())
                     .build();
 
             // Calculate item totals
@@ -165,7 +164,7 @@ public class SalesOrderService {
 
             // Update product quantity
             product.setQuantity(newQuantity);
-            product.setUpdatedBy(SecurityUtils.currentUsername());
+            product.setUpdatedBy(SecurityUtils.currentUserId());
             product.setUpdatedAt(System.currentTimeMillis());
 
             // Save product
@@ -192,7 +191,8 @@ public class SalesOrderService {
         String customerName = request.getCustomerName();
 
         // Try to find existing customer by phone number
-        Optional<Customer> existingCustomer = customerRepository.findByPhoneNumber(phoneNumber);
+        Optional<Customer> existingCustomer = customerRepository.findByPhoneNumberAndCreatedBy(phoneNumber,
+                SecurityUtils.currentUserId());
 
         Customer customer;
         if (existingCustomer.isPresent()) {
@@ -203,7 +203,7 @@ public class SalesOrderService {
             customer.setAddress(request.getCustomerAddress());
             customer.setGstNumber(request.getCustomerGstIn() != null ? request.getCustomerGstIn() : "");
             customer.setUpdatedAt(System.currentTimeMillis());
-            customer.setUpdatedBy(SecurityUtils.currentUsername());
+            customer.setUpdatedBy(SecurityUtils.currentUserId());
         } else {
             // Create new customer
             customer = new Customer();
@@ -214,7 +214,7 @@ public class SalesOrderService {
             customer.setGstNumber(request.getCustomerGstIn() != null ? request.getCustomerGstIn() : "");
             customer.setCreatedAt(System.currentTimeMillis());
 //            customer.setUpdatedAt(System.currentTimeMillis());
-            customer.setCreatedBy(SecurityUtils.currentUsername());
+            customer.setCreatedBy(SecurityUtils.currentUserId());
         }
 
         // ✅ SAVE TO DATABASE
@@ -225,7 +225,7 @@ public class SalesOrderService {
      * Get all sales orders
      */
     public List<SalesOrderResponse> getAllSalesOrders() {
-        return salesOrderRepository.findAll().stream()
+        return salesOrderRepository.findAllByCreatedBy(SecurityUtils.currentUserId()).stream()
             .map(SalesOrderResponse::fromEntity)
             .collect(Collectors.toList());
     }
@@ -243,7 +243,7 @@ public class SalesOrderService {
      * Get sales order by order number
      */
     public SalesOrderResponse getSalesOrderByOrderNumber(String orderNumber) {
-        SalesOrder order = salesOrderRepository.findByOrderNumber(orderNumber)
+        SalesOrder order = salesOrderRepository.findByOrderNumberAndCreatedBy(orderNumber, SecurityUtils.currentUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Sales order not found with order number: " + orderNumber));
         return SalesOrderResponse.fromEntity(order);
     }
@@ -252,7 +252,7 @@ public class SalesOrderService {
      * Get sales orders by customer phone
      */
     public List<SalesOrderResponse> getSalesOrdersByCustomerPhone(String phone) {
-        return salesOrderRepository.findByCustomerPhone(phone).stream()
+        return salesOrderRepository.findByCustomerPhoneAndCreatedBy(phone, SecurityUtils.currentUserId()).stream()
                 .map(SalesOrderResponse::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -261,7 +261,7 @@ public class SalesOrderService {
      * Get unpaid orders
      */
     public List<SalesOrderResponse> getUnpaidOrders() {
-        return salesOrderRepository.findUnpaidOrders().stream()
+        return salesOrderRepository.findByPaymentStatusAndCreatedBy(SalesOrder.PaymentStatus.UNPAID, SecurityUtils.currentUserId()).stream()
                 .map(SalesOrderResponse::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -276,7 +276,7 @@ public class SalesOrderService {
         order.setPaymentStatus(SalesOrder.PaymentStatus.PAID);
         order.setPaidAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
-        order.setUpdatedBy(SecurityUtils.currentUsername());
+        order.setUpdatedBy(SecurityUtils.currentUserId());
 
         SalesOrder savedOrder = salesOrderRepository.save(order);
         log.info("Order {} marked as paid", order.getOrderNumber());
@@ -339,7 +339,7 @@ public class SalesOrderService {
 
         // Update order status to CANCELLED
         order.setStatus(SalesOrder.OrderStatus.CANCELLED);
-        order.setUpdatedBy(SecurityUtils.currentUsername());
+        order.setUpdatedBy(SecurityUtils.currentUserId());
         order.setUpdatedAt(LocalDateTime.now());
         SalesOrder savedOrder = salesOrderRepository.save(order);
 
@@ -351,7 +351,7 @@ public class SalesOrderService {
      * Search orders
      */
     public List<SalesOrderResponse> searchOrders(String searchTerm) {
-        return salesOrderRepository.searchOrders(searchTerm).stream()
+        return salesOrderRepository.searchOrdersByUser(searchTerm, SecurityUtils.currentUserId()).stream()
                 .map(SalesOrderResponse::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -360,7 +360,7 @@ public class SalesOrderService {
      * Get sales between dates
      */
     public List<SalesOrderResponse> getSalesOrdersBetweenDates(LocalDateTime startDate, LocalDateTime endDate) {
-        return salesOrderRepository.findOrdersBetweenDates(startDate, endDate).stream()
+        return salesOrderRepository.findOrdersBetweenDatesAndUser(startDate, endDate, SecurityUtils.currentUserId()).stream()
                 .map(SalesOrderResponse::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -386,7 +386,7 @@ public class SalesOrderService {
      * Get sales summary
      */
     public Map<String, Object> getSalesSummary() {
-        List<SalesOrder> allOrders = salesOrderRepository.findAll();
+        List<SalesOrder> allOrders = salesOrderRepository.findAllByCreatedBy(SecurityUtils.currentUserId());
 
         BigDecimal totalRevenue = allOrders.stream()
                 .map(SalesOrder::getTotalAmount)
@@ -397,8 +397,11 @@ public class SalesOrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         long totalOrders = allOrders.size();
-        long paidOrders = salesOrderRepository.countByPaymentStatus(SalesOrder.PaymentStatus.PAID);
-        long unpaidOrders = salesOrderRepository.countByPaymentStatus(SalesOrder.PaymentStatus.UNPAID);
+        long paidOrders = salesOrderRepository
+                .countByPaymentStatusAndCreatedBy(SalesOrder.PaymentStatus.PAID,
+                SecurityUtils.currentUserId());
+        long unpaidOrders = salesOrderRepository.countByPaymentStatusAndCreatedBy(SalesOrder.PaymentStatus.UNPAID,
+                SecurityUtils.currentUserId());
 
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalRevenue", totalRevenue);
