@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  billing-app:
+    image: billing-system:1.0.1
+#    container_name: billing-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod   # activate prod profile
+      DB_HOST: aws-1-ap-south-1.pooler.supabase.com
+      DB_PORT: "5432"
+      DB_NAME: postgres
+      DB_USER: postgres.sjkhhekjnopxnrfpyzao
+      DB_PASS: Supabase@8599
+      UI_ORIGIN: http://localhost:3000   # replace with your actual frontend URL
+    restart: unless-stopped
+
