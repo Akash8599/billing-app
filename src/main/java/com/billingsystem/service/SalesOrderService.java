@@ -45,8 +45,9 @@ public class SalesOrderService {
      * - Reduce inventory
      * - Calculate totals with GST
      */
-    public SalesOrderResponse createSalesOrder(CreateSalesOrderRequest request, String currentUser) throws InsufficientStockException {
-        log.info("Creating sales order for customer: {}", request.getCustomerName());
+    public SalesOrderResponse createSalesOrder(CreateSalesOrderRequest request, String currentUser)
+            throws InsufficientStockException {
+        log.info("Creating sales order for customer: {} by user: {}", request.getCustomerName(), currentUser);
 
         Customer customer = saveOrUpdateCustomer(request);
 
@@ -64,19 +65,18 @@ public class SalesOrderService {
         }
 
         // Check stock for all products first
+        log.debug("Validating stock availability for {} items", request.getItems().size());
         Map<Long, Integer> productQuantities = new HashMap<>();
         for (CreateSalesOrderRequest.SalesOrderItemRequest itemRequest : request.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Product not found with id: " + itemRequest.getProductId()
-                    ));
+                            "Product not found with id: " + itemRequest.getProductId()));
 
             if (itemRequest.getQuantity() > product.getQuantity()) {
                 throw new InsufficientStockException(
                         "Insufficient stock for product: " + product.getName() +
                                 ". Available: " + product.getQuantity() +
-                                ", Requested: " + itemRequest.getQuantity()
-                );
+                                ", Requested: " + itemRequest.getQuantity());
             }
 
             productQuantities.put(itemRequest.getProductId(), itemRequest.getQuantity());
@@ -107,25 +107,22 @@ public class SalesOrderService {
         for (CreateSalesOrderRequest.SalesOrderItemRequest itemRequest : request.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Product not found with id: " + itemRequest.getProductId()
-                    ));
+                            "Product not found with id: " + itemRequest.getProductId()));
 
             // Create order item
             SalesOrderItem item = SalesOrderItem.builder()
                     .salesOrder(salesOrder)
                     .product(product)
-//                    .productId(product.getId())
+                    // .productId(product.getId())
                     .productName(product.getName())
                     .productSku(product.getSku())
                     .productDescription(product.getDescription())
                     .quantity(itemRequest.getQuantity())
-                    .snapshotSellingPrice(itemRequest.getSellingPrice() != null ?
-                            itemRequest.getSellingPrice() :
-                            BigDecimal.valueOf(product.getSellingPrice()))
+                    .snapshotSellingPrice(itemRequest.getSellingPrice() != null ? itemRequest.getSellingPrice()
+                            : BigDecimal.valueOf(product.getSellingPrice()))
                     .snapshotCostPrice(BigDecimal.valueOf(product.getCostPrice()))
-                    .snapshotGstRate(itemRequest.getGstRate() != null ?
-                            itemRequest.getGstRate().intValue() :
-                            product.getGstRate().intValue())
+                    .snapshotGstRate(itemRequest.getGstRate() != null ? itemRequest.getGstRate().intValue()
+                            : product.getGstRate().intValue())
                     .discountPercent(itemRequest.getDiscountPercent())
                     .createdAt(LocalDateTime.now())
                     .createdBy(SecurityUtils.currentUserId())
@@ -136,7 +133,7 @@ public class SalesOrderService {
             items.add(item);
 
             log.info("Creating order item: Product ID={}, Name={}, Quantity={}",
-                product.getId(), product.getName(), itemRequest.getQuantity());
+                    product.getId(), product.getName(), itemRequest.getQuantity());
         }
 
         // Set items and calculate totals
@@ -151,16 +148,15 @@ public class SalesOrderService {
         log.info("📦 Starting inventory reduction for {} items", savedOrder.getItems().size());
         for (SalesOrderItem item : savedOrder.getItems()) {
             Product product = productRepository.findById(item.getProduct().getId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                    "Product not found with id: " + item.getProduct().getId()
-                ));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Product not found with id: " + item.getProduct().getId()));
 
             int oldQuantity = product.getQuantity();
             int orderedQuantity = item.getQuantity();
             int newQuantity = oldQuantity - orderedQuantity;
 
             log.info("Reducing inventory for Product ID {}: {} - {} = {}",
-                product.getId(), oldQuantity, orderedQuantity, newQuantity);
+                    product.getId(), oldQuantity, orderedQuantity, newQuantity);
 
             // Update product quantity
             product.setQuantity(newQuantity);
@@ -178,7 +174,6 @@ public class SalesOrderService {
 
         return SalesOrderResponse.fromEntity(savedOrder);
     }
-
 
     /**
      * ✅ KEY METHOD: Save or update customer to database
@@ -213,11 +208,12 @@ public class SalesOrderService {
             customer.setAddress(request.getCustomerAddress());
             customer.setGstNumber(request.getCustomerGstIn() != null ? request.getCustomerGstIn() : "");
             customer.setCreatedAt(System.currentTimeMillis());
-//            customer.setUpdatedAt(System.currentTimeMillis());
+            // customer.setUpdatedAt(System.currentTimeMillis());
             customer.setCreatedBy(SecurityUtils.currentUserId());
         }
 
         // ✅ SAVE TO DATABASE
+        log.debug("Saving/Updating customer details for phone: {}", phoneNumber);
         return customerRepository.save(customer);
     }
 
@@ -226,8 +222,8 @@ public class SalesOrderService {
      */
     public List<SalesOrderResponse> getAllSalesOrders() {
         return salesOrderRepository.findAllByCreatedBy(SecurityUtils.currentUserId()).stream()
-            .map(SalesOrderResponse::fromEntity)
-            .collect(Collectors.toList());
+                .map(SalesOrderResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -243,8 +239,10 @@ public class SalesOrderService {
      * Get sales order by order number
      */
     public SalesOrderResponse getSalesOrderByOrderNumber(String orderNumber) {
-        SalesOrder order = salesOrderRepository.findByOrderNumberAndCreatedBy(orderNumber, SecurityUtils.currentUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("Sales order not found with order number: " + orderNumber));
+        SalesOrder order = salesOrderRepository
+                .findByOrderNumberAndCreatedBy(orderNumber, SecurityUtils.currentUserId())
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Sales order not found with order number: " + orderNumber));
         return SalesOrderResponse.fromEntity(order);
     }
 
@@ -261,7 +259,9 @@ public class SalesOrderService {
      * Get unpaid orders
      */
     public List<SalesOrderResponse> getUnpaidOrders() {
-        return salesOrderRepository.findByPaymentStatusAndCreatedBy(SalesOrder.PaymentStatus.UNPAID, SecurityUtils.currentUserId()).stream()
+        return salesOrderRepository
+                .findByPaymentStatusAndCreatedBy(SalesOrder.PaymentStatus.UNPAID, SecurityUtils.currentUserId())
+                .stream()
                 .map(SalesOrderResponse::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -347,6 +347,7 @@ public class SalesOrderService {
 
         return SalesOrderResponse.fromEntity(savedOrder);
     }
+
     /**
      * Search orders
      */
@@ -360,7 +361,8 @@ public class SalesOrderService {
      * Get sales between dates
      */
     public List<SalesOrderResponse> getSalesOrdersBetweenDates(LocalDateTime startDate, LocalDateTime endDate) {
-        return salesOrderRepository.findOrdersBetweenDatesAndUser(startDate, endDate, SecurityUtils.currentUserId()).stream()
+        return salesOrderRepository.findOrdersBetweenDatesAndUser(startDate, endDate, SecurityUtils.currentUserId())
+                .stream()
                 .map(SalesOrderResponse::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -399,7 +401,7 @@ public class SalesOrderService {
         long totalOrders = allOrders.size();
         long paidOrders = salesOrderRepository
                 .countByPaymentStatusAndCreatedBy(SalesOrder.PaymentStatus.PAID,
-                SecurityUtils.currentUserId());
+                        SecurityUtils.currentUserId());
         long unpaidOrders = salesOrderRepository.countByPaymentStatusAndCreatedBy(SalesOrder.PaymentStatus.UNPAID,
                 SecurityUtils.currentUserId());
 
@@ -412,13 +414,10 @@ public class SalesOrderService {
         summary.put("averageOrderValue",
                 totalOrders > 0
                         ? totalRevenue.divide(
-                        BigDecimal.valueOf(totalOrders),
-                        2,
-                        RoundingMode.HALF_UP
-                )
-                        : BigDecimal.ZERO
-        );
-
+                                BigDecimal.valueOf(totalOrders),
+                                2,
+                                RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO);
 
         return summary;
     }

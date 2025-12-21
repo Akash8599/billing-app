@@ -9,7 +9,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod   # activate prod profile
       DB_HOST: aws-1-ap-south-1.pooler.supabase.com
-      DB_PORT: "5432"
+      DB_PORT: "6543"
       DB_NAME: postgres
       DB_USER: postgres.sjkhhekjnopxnrfpyzao
       DB_PASS: Supabase@8599

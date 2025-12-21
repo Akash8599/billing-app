@@ -27,7 +27,7 @@ public class InvoiceService {
      * Generate invoice data for a sales order
      */
     public Map<String, Object> generateInvoiceData(Long orderId) {
-        log.info("Generating invoice data for order: {}", orderId);
+        log.info("Starting invoice generation for Order ID: {}", orderId);
 
         // Get order details
         SalesOrderResponse order = salesOrderService.getSalesOrderById(orderId);
@@ -93,7 +93,7 @@ public class InvoiceService {
         // Status
         invoiceData.put("status", order.getStatus());
 
-        log.info("✅ Invoice data generated successfully");
+        log.info("✅ Invoice data generated successfully for Order: {}, Invoice: {}", order.getOrderNumber(), order.getInvoiceNumber());
         return invoiceData;
     }
 

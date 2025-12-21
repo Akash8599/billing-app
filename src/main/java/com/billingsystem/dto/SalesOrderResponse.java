@@ -1,7 +1,6 @@
 package com.billingsystem.dto;
 
 import com.billingsystem.model.SalesOrder;
-import jakarta.persistence.Column;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

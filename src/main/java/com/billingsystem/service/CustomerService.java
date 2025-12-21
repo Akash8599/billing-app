@@ -6,6 +6,7 @@ import com.billingsystem.model.Customer;
 import com.billingsystem.repository.CustomerRepository;
 import com.billingsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +52,6 @@ public class CustomerService {
         return customerMapper.toCustomerRequest(saved);
     }
 
-
     /**
      * Get all customers
      */
@@ -74,8 +74,9 @@ public class CustomerService {
      * Get or create customer by phone number (for quick checkout)
      */
     public Customer getOrCreateCustomer(String phoneNumber, String name, String type) {
-        Optional<Customer> existing = customerRepository.findByPhoneNumberAndCreatedBy(phoneNumber, SecurityUtils.currentUserId());
-        
+        Optional<Customer> existing = customerRepository.findByPhoneNumberAndCreatedBy(phoneNumber,
+                SecurityUtils.currentUserId());
+
         if (existing.isPresent()) {
             return existing.get();
         }
@@ -83,13 +84,13 @@ public class CustomerService {
         Customer customer = new Customer();
         customer.setName(name);
         customer.setPhoneNumber(phoneNumber);
-//        customer.setCustomerType(type);
-//        customer.setGstNumber("");
+        // customer.setCustomerType(type);
+        // customer.setGstNumber("");
         customer.setCreatedAt(System.currentTimeMillis());
         customer.setUpdatedAt(System.currentTimeMillis());
         customer.setCreatedBy(SecurityUtils.currentUserId());
         customer.setUpdatedBy(SecurityUtils.currentUserId());
-        
+
         return customerRepository.save(customer);
     }
 
@@ -106,13 +107,13 @@ public class CustomerService {
         customer.setAddress(customerData.getAddress());
         customer.setGstNumber(customerData.getGstin());
         customer.setState(customerData.getState());
-//        customer.setStateCode(customerData.getState());
-//        customer.setCustomerType(customerData.getCustomerType());
+        // customer.setStateCode(customerData.getState());
+        // customer.setCustomerType(customerData.getCustomerType());
         customer.setUpdatedAt(System.currentTimeMillis());
         customer.setUpdatedBy(SecurityUtils.currentUserId());
 
         Customer update = customerRepository.save(customer);
-        CustomerRequest  response = customerMapper.toCustomerRequest(update);
+        CustomerRequest response = customerMapper.toCustomerRequest(update);
         return response;
     }
 

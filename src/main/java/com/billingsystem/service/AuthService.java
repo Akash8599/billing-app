@@ -7,11 +7,13 @@ import com.billingsystem.model.User;
 import com.billingsystem.repository.UserRepository;
 import com.billingsystem.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
@@ -32,11 +34,10 @@ public class AuthService {
         String token = jwtProvider.generateToken(user.getUsername(), user.getRole(), user.getId());
 
         return new LoginResponse(
-            token,
-            user.getUsername(),
-            user.getRole(),
-            "Login successful"
-        );
+                token,
+                user.getUsername(),
+                user.getRole(),
+                "Login successful");
     }
 
     public LoginResponse register(RegisterRequest request) {
@@ -57,16 +58,16 @@ public class AuthService {
         user.setRole(request.getRole() != null ? request.getRole() : "ADMIN");
         user.setActive(true);
         user.setCreatedAt(System.currentTimeMillis());
-//        user.setUpdatedAt(System.currentTimeMillis());
+        // user.setUpdatedAt(System.currentTimeMillis());
+        log.info("Saving new user to database: {}", user.getUsername());
         userRepository.save(user);
 
         String token = jwtProvider.generateToken(user.getUsername(), user.getRole(), user.getId());
 
         return new LoginResponse(
-            token,
-            user.getUsername(),
-            user.getRole(),
-            "Registration successful"
-        );
+                token,
+                user.getUsername(),
+                user.getRole(),
+                "Registration successful");
     }
 }

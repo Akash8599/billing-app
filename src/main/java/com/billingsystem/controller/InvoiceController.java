@@ -28,8 +28,9 @@ public class InvoiceController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<?> getInvoiceData(@PathVariable Long orderId) {
         try {
-            log.info("GET request: Fetch invoice data for order: {}", orderId);
+            log.info("Request to generate/fetch invoice data for Order ID: {}", orderId);
             Map<String, Object> invoiceData = invoiceService.generateInvoiceData(orderId);
+            log.info("Successfully fetched invoice data for Order ID: {}", orderId);
             return ResponseEntity.ok(invoiceData);
         } catch (Exception e) {
             log.error("Error generating invoice: {}", e.getMessage());

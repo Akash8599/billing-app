@@ -5,6 +5,7 @@ import com.billingsystem.model.*;
 import com.billingsystem.repository.*;
 import com.billingsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class PurchaseOrderService {
     private final PurchaseOrderRepository poRepository;
     private final ProductRepository productRepository;
@@ -21,6 +23,7 @@ public class PurchaseOrderService {
      * Create new purchase order
      */
     public PurchaseOrder createPurchaseOrder(CreatePurchaseOrderRequest request) {
+        log.info("Creating purchase order for supplier: {}", request.getSupplierName());
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new RuntimeException("Purchase order must contain at least one item");
         }
@@ -45,6 +48,8 @@ public class PurchaseOrderService {
 
                 items.add(item);
                 totalAmount += itemTotal;
+                
+                log.debug("Added PO item: Product={}, Quantity={}, Cost={}", product.getName(), itemReq.getQuantity(), itemReq.getCostPrice());
             }
 
             PurchaseOrder po = new PurchaseOrder();
@@ -57,7 +62,9 @@ public class PurchaseOrderService {
             po.setCreatedAt(System.currentTimeMillis());
             po.setCreatedBy(SecurityUtils.currentUserId());
 
-            return poRepository.save(po);
+            PurchaseOrder saved = poRepository.save(po);
+            log.info("✅ Purchase order created with PO Number: {}", saved.getPoNumber());
+            return saved;
         }
         catch (Exception e){
             e.printStackTrace();

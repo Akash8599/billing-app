@@ -1,6 +1,5 @@
 package com.billingsystem.controller;
 
-
 import com.billingsystem.dto.CreateSalesOrderRequest;
 import com.billingsystem.dto.SalesOrderResponse;
 import com.billingsystem.service.SalesOrderService;
@@ -14,7 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,9 +67,8 @@ public class SalesOrderController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER', 'CUSTOMER')")
     public ResponseEntity<?> createSalesOrder(
-             @RequestBody CreateSalesOrderRequest request,
-            Authentication authentication
-    ) {
+            @RequestBody CreateSalesOrderRequest request,
+            Authentication authentication) {
         try {
             log.info("POST request: Create sales order for customer: {}", request.getCustomerName());
 
@@ -106,8 +103,7 @@ public class SalesOrderController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateSalesOrder(
             @PathVariable Long id,
-            @RequestBody Map<String, Object> updates
-    ) {
+            @RequestBody Map<String, Object> updates) {
         try {
             log.info("PUT request: Update sales order with id: {}", id);
             // Implementation for updating order status
@@ -191,8 +187,7 @@ public class SalesOrderController {
             // TODO: Implement invoice generation and PDF creation
             return ResponseEntity.ok(Map.of(
                     "message", "Invoice generated successfully",
-                    "invoiceNumber", order.getInvoiceNumber()
-            ));
+                    "invoiceNumber", order.getInvoiceNumber()));
         } catch (Exception e) {
             log.error("Error generating invoice: {}", e.getMessage());
             return ResponseEntity
@@ -241,8 +236,7 @@ public class SalesOrderController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<SalesOrderResponse>> getOrdersBetweenDates(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
-    ) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         log.info("GET request: Fetch orders between {} and {}", startDate, endDate);
         List<SalesOrderResponse> orders = salesOrderService.getSalesOrdersBetweenDates(startDate, endDate);
         return ResponseEntity.ok(orders);

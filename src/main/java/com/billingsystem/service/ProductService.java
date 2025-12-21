@@ -6,6 +6,7 @@ import com.billingsystem.repository.ProductRepository;
 import com.billingsystem.repository.SalesOrderItemRepository;
 import com.billingsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ProductService {
     private final ProductRepository productRepository;
     private final SalesOrderItemRepository salesOrderItemRepository;
@@ -30,9 +32,9 @@ public class ProductService {
         }
 
         product.setCreatedAt(System.currentTimeMillis());
-//        product.setUpdatedAt(System.currentTimeMillis());
+        // product.setUpdatedAt(System.currentTimeMillis());
         product.setCreatedBy(SecurityUtils.currentUserId());
-        product.setIsActive(true);  // ← Ensure new product is active
+        product.setIsActive(true); // ← Ensure new product is active
         return productRepository.save(product);
     }
 
@@ -40,7 +42,7 @@ public class ProductService {
      * Get all ACTIVE products only
      */
     public List<Product> getAllProducts() {
-        return productRepository.findAllByIsActiveTrueAndCreatedBy(SecurityUtils.currentUserId());  // ← Only active
+        return productRepository.findAllByIsActiveTrueAndCreatedBy(SecurityUtils.currentUserId()); // ← Only active
     }
 
     /**
@@ -110,13 +112,13 @@ public class ProductService {
      *
      * Logic:
      * 1. If product is used in sales orders:
-     *    → Mark as isActive = false (soft delete)
-     *    → Old orders keep snapshot data, no issues
-     *    → New orders won't see this product
+     * → Mark as isActive = false (soft delete)
+     * → Old orders keep snapshot data, no issues
+     * → New orders won't see this product
      *
      * 2. If product is NOT used:
-     *    → Actually delete from database (hard delete)
-     *    → No orphaned data since not used anywhere
+     * → Actually delete from database (hard delete)
+     * → No orphaned data since not used anywhere
      *
      * Benefits:
      * ✅ No data loss
@@ -129,49 +131,39 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
         // Check if product is used in any sales orders
-        List<SalesOrderItem> usedInOrders = salesOrderItemRepository.findByProductIdAndUser(id, SecurityUtils.currentUserId());
+        List<SalesOrderItem> usedInOrders = salesOrderItemRepository.findByProductIdAndUser(id,
+                SecurityUtils.currentUserId());
 
         if (usedInOrders != null && !usedInOrders.isEmpty()) {
             // ════════════════════════════════════════════════════════════════
             // PRODUCT IS USED: Mark as inactive (Soft Delete)
             // ════════════════════════════════════════════════════════════════
 
-            System.out.println("📦 Product '" + product.getName() + "' is used in " +
-                    usedInOrders.size() + " sales order(s)");
-            System.out.println("   Action: Marking as inactive (Soft Delete)");
-            System.out.println();
-            System.out.println("✅ Why this is safe:");
-            System.out.println("   • Old orders have SNAPSHOT of product data");
-            System.out.println("   • No constraint violations");
-            System.out.println("   • Invoices/Reports still work");
-            System.out.println("   • Can reactivate if needed");
-            System.out.println("   • New orders won't see this product");
+            log.warn("Product '{}' is used in {} sales order(s). Action: Marking as inactive (Soft Delete)",
+                    product.getName(), usedInOrders.size());
+            log.debug("Soft delete rationale: Old orders have snapshot, no constraint violations.");
 
             // Mark as inactive
             product.setIsActive(false);
             product.setUpdatedAt(System.currentTimeMillis());
             productRepository.save(product);
 
-            System.out.println();
-            System.out.println("✅ Product '" + product.getName() + "' marked as INACTIVE");
-            System.out.println("   (Not deleted, just hidden from new orders)");
+            log.info("Product '{}' marked as INACTIVE (soft deleted). Hidden from new orders.", product.getName());
 
         } else {
             // ════════════════════════════════════════════════════════════════
             // PRODUCT IS NOT USED: Delete it permanently (Hard Delete)
             // ════════════════════════════════════════════════════════════════
 
-            System.out.println("🗑️  Product '" + product.getName() + "' is NOT used in any orders");
-            System.out.println("   Action: Deleting permanently (Hard Delete)");
+            log.info("Product '{}' is NOT used in any orders. Action: Deleting permanently (Hard Delete)",
+                    product.getName());
 
             try {
                 productRepository.deleteById(id);
-                System.out.println();
-                System.out.println("✅ Product '" + product.getName() + "' DELETED from database");
-                System.out.println("   (Removed completely - clean database)");
+                log.info("Product '{}' DELETED from database.", product.getName());
 
             } catch (Exception e) {
-                System.out.println("❌ Error deleting: " + e.getMessage());
+                log.error("Error deleting product '{}': {}", product.getName(), e.getMessage());
                 throw new RuntimeException("Failed to delete product: " + e.getMessage(), e);
             }
         }
@@ -181,7 +173,8 @@ public class ProductService {
      * Get product usage count
      */
     public long getProductUsageCount(Long productId) {
-        List<SalesOrderItem> items = salesOrderItemRepository.findByProductIdAndUser(productId, SecurityUtils.currentUserId());
+        List<SalesOrderItem> items = salesOrderItemRepository.findByProductIdAndUser(productId,
+                SecurityUtils.currentUserId());
         return items != null ? items.size() : 0;
     }
 
@@ -189,7 +182,8 @@ public class ProductService {
      * Check if product is used in orders
      */
     public boolean isProductUsedInOrders(Long productId) {
-        List<SalesOrderItem> items = salesOrderItemRepository.findByProductIdAndUser(productId, SecurityUtils.currentUserId());
+        List<SalesOrderItem> items = salesOrderItemRepository.findByProductIdAndUser(productId,
+                SecurityUtils.currentUserId());
         return items != null && !items.isEmpty();
     }
 
